@@ -10,6 +10,21 @@ const app = new Hono<{
     }
 }>();
 
+
+//protect via middleware
+app.use('api/v1/blog/*',async (c,next)=>{
+    const header = c.req.header('authorization') || ' ';
+    const token = header.split(" ")[1];
+    const response = await verify(token,c.env.JWT_SECRET);
+    if (!response){
+        c.status(403);
+        return c.json({error : "unauthorized"})
+    }
+     c.set('userId',response.id)
+
+     await next();
+})
+
 app.post('/api/v1/signup', async (c) => {
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
@@ -68,6 +83,6 @@ app.post('/api/v1/blog', (c) => {
 })
 
 app.put('/api/v1/blog', (c) => {
-    return c.text('signin route')
+    return c.json('This is my blog')
 })
 export default app
